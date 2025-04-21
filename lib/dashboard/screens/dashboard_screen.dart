@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mini_taskhub/app/theme.dart';
 import 'package:mini_taskhub/auth/providers/auth_provider.dart';
+import 'package:mini_taskhub/dashboard/models/filter_model.dart';
 import 'package:mini_taskhub/dashboard/models/task_model.dart';
 import 'package:mini_taskhub/dashboard/providers/task_provider.dart';
 import 'package:mini_taskhub/dashboard/widgets/add_task_sheet.dart';
+import 'package:mini_taskhub/dashboard/widgets/filter_dialog.dart';
 import 'package:mini_taskhub/dashboard/widgets/task_tile.dart';
 import 'package:mini_taskhub/utils/constants.dart';
 import 'package:mini_taskhub/widgets/loading_indicator.dart';
@@ -119,6 +121,19 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     }
   }
 
+  void _showFilterDialog() {
+    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+    showDialog(
+      context: context,
+      builder: (context) => FilterDialog(
+        currentFilter: taskProvider.filter,
+        onApplyFilter: (filter) {
+          taskProvider.setFilter(filter);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -133,11 +148,15 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       );
     }
 
-    final pendingTasks = taskProvider.tasks
+    // Apply filter to get filtered tasks
+    final filteredTasks = taskProvider.filteredTasks;
+
+    // Split filtered tasks into pending and completed
+    final pendingTasks = filteredTasks
         .where((task) => task.status == TaskStatus.pending)
         .toList();
 
-    final completedTasks = taskProvider.tasks
+    final completedTasks = filteredTasks
         .where((task) => task.status == TaskStatus.completed)
         .toList();
 
@@ -190,18 +209,50 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
         backgroundColor: AppTheme.backgroundColor,
         foregroundColor: AppTheme.textColor,
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: AppTheme.cardColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.logout),
-              color: AppTheme.errorColor,
-              onPressed: _signOut,
-              tooltip: 'Logout',
-            ),
+          Row(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.filter_list),
+                  color: AppTheme.primaryColor,
+                  onPressed: _showFilterDialog,
+                  tooltip: 'Filter Tasks',
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.person_outline),
+                  color: AppTheme.primaryColor,
+                  onPressed: () {
+                    Navigator.pushNamed(context, AppConstants.profileRoute);
+                  },
+                  tooltip: 'Profile',
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(right: 16),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.logout),
+                  color: AppTheme.errorColor,
+                  onPressed: _signOut,
+                  tooltip: 'Logout',
+                ),
+              ),
+            ],
           ),
         ],
         bottom: PreferredSize(

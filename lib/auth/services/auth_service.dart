@@ -129,20 +129,48 @@ class AuthService {
   // Get user profile
   Future<Profile?> getUserProfile(String userId) async {
     try {
-      final response = await _supabase
-          .from('profiles')
-          .select()
-          .eq('id', userId)
-          .single();
+      // Try to get existing profile
+      try {
+        final response = await _supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .maybeSingle();
 
-      return Profile.fromJson(response);
-    } catch (e) {
-      // If profile doesn't exist, create one
-      if (_currentUser != null) {
-        final newProfile = Profile.fromUser(_currentUser!);
-        await _supabase.from('profiles').upsert(newProfile.toJson());
-        return newProfile;
+        if (response != null) {
+          return Profile.fromJson(response);
+        }
+      } catch (e) {
+        // If profile doesn't exist, create one
+        if (_currentUser != null) {
+          final newProfile = Profile.fromUser(_currentUser!);
+
+          // Create a map for the profile
+          final profileMap = {
+            'id': newProfile.id,
+            'email': newProfile.email,
+            'created_at': DateTime.now().toIso8601String(),
+          };
+
+          await _supabase.from('profiles').insert(profileMap);
+
+          // Fetch the newly created profile
+          final response = await _supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', userId)
+              .maybeSingle();
+
+          if (response != null) {
+            return Profile.fromJson(response);
+          } else {
+            return newProfile;
+          }
+        }
       }
+
+      throw Exception('Failed to get or create user profile');
+    } catch (e) {
       throw Exception('Failed to get user profile: ${e.toString()}');
     }
   }
@@ -150,7 +178,17 @@ class AuthService {
   // Update user profile
   Future<void> updateUserProfile(Profile profile) async {
     try {
-      await _supabase.from('profiles').upsert(profile.toJson());
+      // Create a map for the profile update
+      final profileMap = {
+        'full_name': profile.fullName,
+        'avatar_url': profile.avatarUrl,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      await _supabase
+        .from('profiles')
+        .update(profileMap)
+        .eq('id', profile.id);
     } catch (e) {
       throw Exception('Failed to update user profile: ${e.toString()}');
     }

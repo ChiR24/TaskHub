@@ -20,10 +20,67 @@ class TaskTile extends StatelessWidget {
     required this.onEdit,
   });
 
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case TaskCategory.work:
+        return Icons.work_outline;
+      case TaskCategory.personal:
+        return Icons.person_outline;
+      case TaskCategory.shopping:
+        return Icons.shopping_cart_outlined;
+      case TaskCategory.health:
+        return Icons.favorite_border;
+      case TaskCategory.education:
+        return Icons.school_outlined;
+      case TaskCategory.finance:
+        return Icons.account_balance_outlined;
+      case TaskCategory.other:
+      default:
+        return Icons.category_outlined;
+    }
+  }
+
+  Color _getPriorityColor(TaskPriority priority) {
+    switch (priority) {
+      case TaskPriority.low:
+        return Colors.green;
+      case TaskPriority.medium:
+        return AppTheme.primaryColor;
+      case TaskPriority.high:
+        return Colors.red;
+      default:
+        return AppTheme.primaryColor;
+    }
+  }
+
+  String _getPriorityText(TaskPriority priority) {
+    switch (priority) {
+      case TaskPriority.low:
+        return 'Low';
+      case TaskPriority.medium:
+        return 'Medium';
+      case TaskPriority.high:
+        return 'High';
+      default:
+        return 'Medium';
+    }
+  }
+
+  bool _isDueDateNear() {
+    if (task.dueDate == null) return false;
+
+    final now = DateTime.now();
+    final difference = task.dueDate!.difference(now).inDays;
+
+    // Return true if due date is today or in the past, or within 2 days
+    return difference <= 2;
+  }
+
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM dd, yyyy');
     final formattedDate = dateFormat.format(task.createdAt);
+    final dueDateText = task.dueDate != null ? dateFormat.format(task.dueDate!) : null;
 
     // Generate a consistent pastel color based on the task title
     final int hashCode = task.title.hashCode;
@@ -208,7 +265,7 @@ class TaskTile extends StatelessWidget {
                       ),
                     ),
 
-                  // Date and actions
+                  // Category and priority
                   Padding(
                     padding: const EdgeInsets.only(
                       top: 12,
@@ -216,19 +273,127 @@ class TaskTile extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.calendar_today_outlined,
-                          size: 14,
-                          color: AppTheme.textLightColor.withOpacity(0.7),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          formattedDate,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.textLightColor.withOpacity(0.7),
+                        // Category
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.backgroundColor,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppTheme.borderColor,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _getCategoryIcon(task.category),
+                                size: 14,
+                                color: AppTheme.primaryColor,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                task.category,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.textColor,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                        const SizedBox(width: 8),
+                        // Priority
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getPriorityColor(task.priority).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _getPriorityColor(task.priority).withOpacity(0.5),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.flag,
+                                size: 14,
+                                color: _getPriorityColor(task.priority),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _getPriorityText(task.priority),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: _getPriorityColor(task.priority),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Dates and actions
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      top: 12,
+                      left: 36,
+                    ),
+                    child: Row(
+                      children: [
+                        // Created date
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_today_outlined,
+                              size: 14,
+                              color: AppTheme.textLightColor.withOpacity(0.7),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Created: $formattedDate',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.textLightColor.withOpacity(0.7),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Due date if available
+                        if (dueDateText != null) ...[
+                          const SizedBox(width: 12),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.event,
+                                size: 14,
+                                color: _isDueDateNear() ? Colors.red : AppTheme.textLightColor.withOpacity(0.7),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Due: $dueDateText',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: _isDueDateNear() ? Colors.red : AppTheme.textLightColor.withOpacity(0.7),
+                                  fontWeight: _isDueDateNear() ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+
                         const Spacer(),
                         // Quick action buttons
                         IconButton(

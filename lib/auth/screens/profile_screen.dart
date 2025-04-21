@@ -34,35 +34,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadProfile() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    await authProvider.getUserProfile();
-    
-    if (authProvider.profile != null && mounted) {
-      setState(() {
-        _fullNameController.text = authProvider.profile!.fullName ?? '';
-        _isLoading = false;
-      });
-    }
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Use Future.microtask to avoid calling setState during build
+    Future.microtask(() async {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      await authProvider.getUserProfile();
+
+      if (authProvider.profile != null && mounted) {
+        setState(() {
+          _fullNameController.text = authProvider.profile!.fullName ?? '';
+          _isLoading = false;
+        });
+      }
+    });
   }
 
   Future<void> _updateProfile() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      
+
       setState(() {
         _isLoading = true;
       });
-      
+
       final success = await authProvider.updateUserProfile(
         fullName: _fullNameController.text.trim(),
       );
-      
+
       if (mounted) {
         setState(() {
           _isLoading = false;
           _isEditing = !success;
         });
-        
+
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -236,7 +243,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ],
                           ),
                           const SizedBox(height: AppConstants.mediumPadding),
-                          
+
                           // Full name field
                           if (_isEditing)
                             CustomTextField(
@@ -297,7 +304,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ],
                             ),
-                          
+
                           if (_isEditing) ...[
                             const SizedBox(height: AppConstants.largePadding),
                             SizedBox(
@@ -340,7 +347,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                         ),
                         const SizedBox(height: AppConstants.mediumPadding),
-                        
+
                         // Logout button
                         ListTile(
                           leading: Container(
@@ -380,7 +387,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ],
                               ),
                             );
-                            
+
                             if (confirmed == true && mounted) {
                               await authProvider.signOut();
                               if (mounted) {

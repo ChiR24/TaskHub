@@ -6,6 +6,7 @@ class AppConstants {
   static const String loginRoute = '/login';
   static const String signupRoute = '/signup';
   static const String dashboardRoute = '/dashboard';
+  static const String profileRoute = '/profile';
 
   // Animation durations
   static const Duration shortAnimationDuration = Duration(milliseconds: 200);
