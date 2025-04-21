@@ -25,11 +25,12 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # Skip analysis and tests for release build
       - name: Build web
-        run: flutter build web --release
+        run: flutter build web --release --no-tree-shake-icons
 
       - name: Build Android APK
-        run: flutter build apk --release
+        run: flutter build apk --release --no-tree-shake-icons
 
       - name: Zip Web Build
         run: |
