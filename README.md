@@ -1,19 +1,26 @@
 # DayTask - Personal Task Tracker
 
-A modern personal task tracking app built with Flutter and Supabase. This app allows users to manage their tasks with user authentication, a dashboard to view tasks, and the ability to add, edit, and delete tasks. The app features a clean, modern UI with subtle animations and a responsive design.
+A modern personal task tracking app built with Flutter and Supabase. This app allows users to manage their tasks with user authentication, a dashboard to view tasks, and the ability to add, edit, and delete tasks. The app features a clean, modern UI with subtle animations and a responsive design that works on both web and mobile platforms.
 
 ## Features
 
 - **User Authentication**: Secure login and signup with Supabase Auth
 - **Task Management**: Create, read, update, and delete tasks
 - **Task Status Tracking**: Toggle between pending and completed states
+- **Task Categories**: Organize tasks by categories (Work, Personal, Shopping, etc.)
+- **Task Priorities**: Set priorities (Low, Medium, High) for better task management
+- **Due Dates**: Set and track due dates for tasks
+- **Task Filtering**: Filter tasks by status, category, and priority
+- **Task Sorting**: Sort tasks by creation date, due date, priority, or alphabetically
 - **Modern Dark UI**: Sleek dark theme with yellow accent colors
-- **Responsive Design**: Works on various screen sizes
+- **Responsive Design**: Works on various screen sizes (web, mobile, tablet)
+- **Cross-Platform**: Runs on Web and Android platforms
 - **Real-time Updates**: Changes to tasks are reflected in real-time
 - **Data Persistence**: All data is stored in Supabase database
 - **Clean Architecture**: Well-organized code structure following best practices
 - **Row-Level Security**: Users can only access their own tasks
 - **Subtle Animations**: Smooth transitions and animations for better UX
+- **Comprehensive Documentation**: Well-documented code for easy maintenance
 
 ## Screenshots
 
@@ -37,9 +44,11 @@ lib/
 ├── auth/
 │   ├── screens/
 │   │   ├── login_screen.dart  # Login screen
-│   │   └── signup_screen.dart # Signup screen
+│   │   ├── signup_screen.dart # Signup screen
+│   │   └── profile_screen.dart # User profile screen
 │   ├── models/
-│   │   └── user_model.dart    # User model
+│   │   ├── user_model.dart    # User model
+│   │   └── profile_model.dart # Profile model
 │   ├── providers/
 │   │   └── auth_provider.dart # Auth state management
 │   └── services/
@@ -49,9 +58,11 @@ lib/
 │   │   └── dashboard_screen.dart # Dashboard screen
 │   ├── widgets/
 │   │   ├── task_tile.dart     # Individual task item
-│   │   └── add_task_sheet.dart # Add task bottom sheet
+│   │   ├── add_task_sheet.dart # Add task bottom sheet
+│   │   └── filter_dialog.dart # Task filtering dialog
 │   ├── models/
-│   │   └── task_model.dart    # Task model
+│   │   ├── task_model.dart    # Task model
+│   │   └── filter_model.dart  # Task filter model
 │   ├── providers/
 │   │   └── task_provider.dart # Task state management
 │   └── services/
@@ -90,9 +101,23 @@ lib/
    flutter pub get
    ```
 
-4. Run the app:
+4. Run the app on web:
    ```bash
-   flutter run
+   flutter run -d chrome
+   ```
+
+   Or run on Android:
+   ```bash
+   flutter run -d <android-device-id>
+   ```
+
+   You can also use the provided batch files:
+   ```bash
+   # For web
+   run_app.bat
+
+   # For Android
+   run_android.bat
    ```
 
 ### Supabase Setup
@@ -101,49 +126,108 @@ lib/
 2. Create a new project
 3. Set up the database schema:
    ```sql
-   CREATE TABLE public.tasks (
-     id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+   -- Create profiles table
+   CREATE TABLE IF NOT EXISTS profiles (
+     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+     email TEXT NOT NULL,
+     full_name TEXT,
+     avatar_url TEXT,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+     updated_at TIMESTAMP WITH TIME ZONE
+   );
+
+   -- Create tasks table
+   CREATE TABLE IF NOT EXISTS tasks (
+     id UUID PRIMARY KEY,
      user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
      title TEXT NOT NULL,
      description TEXT,
      is_completed BOOLEAN DEFAULT FALSE,
-     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+     category TEXT DEFAULT 'Other',
+     priority INTEGER DEFAULT 1,
+     due_date TIMESTAMP WITH TIME ZONE,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
    );
 
-   -- Row Level Security Policies
-   ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
+   -- Set up Row Level Security (RLS) for profiles
+   ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
-   -- Policy to allow users to see only their own tasks
-   CREATE POLICY "Users can view their own tasks" ON public.tasks
-     FOR SELECT USING (auth.uid() = user_id);
+   -- Create policies for profiles
+   CREATE POLICY "Enable read access for all users"
+     ON profiles
+     FOR SELECT
+     USING (true);
 
-   -- Policy to allow users to insert their own tasks
-   CREATE POLICY "Users can insert their own tasks" ON public.tasks
-     FOR INSERT WITH CHECK (auth.uid() = user_id);
+   CREATE POLICY "Enable insert for authenticated users"
+     ON profiles
+     FOR INSERT
+     WITH CHECK (auth.uid() = id);
 
-   -- Policy to allow users to update their own tasks
-   CREATE POLICY "Users can update their own tasks" ON public.tasks
-     FOR UPDATE USING (auth.uid() = user_id);
+   CREATE POLICY "Enable update for users based on id"
+     ON profiles
+     FOR UPDATE
+     USING (auth.uid() = id);
 
-   -- Policy to allow users to delete their own tasks
-   CREATE POLICY "Users can delete their own tasks" ON public.tasks
-     FOR DELETE USING (auth.uid() = user_id);
+   -- Set up Row Level Security (RLS) for tasks
+   ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 
-   -- Create a function to update the updated_at timestamp
-   CREATE OR REPLACE FUNCTION update_updated_at_column()
+   -- Create policies for tasks
+   CREATE POLICY "Users can view their own tasks"
+     ON tasks
+     FOR SELECT
+     USING (auth.uid() = user_id);
+
+   CREATE POLICY "Users can insert their own tasks"
+     ON tasks
+     FOR INSERT
+     WITH CHECK (auth.uid() = user_id);
+
+   CREATE POLICY "Users can update their own tasks"
+     ON tasks
+     FOR UPDATE
+     USING (auth.uid() = user_id);
+
+   CREATE POLICY "Users can delete their own tasks"
+     ON tasks
+     FOR DELETE
+     USING (auth.uid() = user_id);
+
+   -- Create a function to handle new user creation
+   CREATE OR REPLACE FUNCTION public.handle_new_user()
    RETURNS TRIGGER AS $$
    BEGIN
-       NEW.updated_at = now();
-       RETURN NEW;
+     INSERT INTO public.profiles (id, email, created_at)
+     VALUES (NEW.id, NEW.email, NOW());
+     RETURN NEW;
+   END;
+   $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+   -- Create a trigger to call the function when a new user is created
+   DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+   CREATE TRIGGER on_auth_user_created
+     AFTER INSERT ON auth.users
+     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+   -- Create a function to update the updated_at timestamp
+   CREATE OR REPLACE FUNCTION set_updated_at()
+   RETURNS TRIGGER AS $$
+   BEGIN
+     NEW.updated_at = NOW();
+     RETURN NEW;
    END;
    $$ LANGUAGE plpgsql;
 
-   -- Create a trigger to automatically update the updated_at column
-   CREATE TRIGGER update_tasks_updated_at
-   BEFORE UPDATE ON public.tasks
+   -- Create triggers to set updated_at on update
+   CREATE TRIGGER set_profiles_updated_at
+   BEFORE UPDATE ON profiles
    FOR EACH ROW
-   EXECUTE FUNCTION update_updated_at_column();
+   EXECUTE FUNCTION set_updated_at();
+
+   CREATE TRIGGER set_tasks_updated_at
+   BEFORE UPDATE ON tasks
+   FOR EACH ROW
+   EXECUTE FUNCTION set_updated_at();
    ```
 
 4. Get your Supabase URL and anon key from the project settings
@@ -171,19 +255,25 @@ This project uses the Provider package for state management. The main providers 
 - `intl`: For date formatting
 - `uuid`: For generating unique IDs
 - `supabase_flutter`: For Supabase integration
+- `app_links`: For deep linking
+- `path_provider`: For file system access
+- `shared_preferences`: For local storage
+- `url_launcher`: For opening URLs
+- `flutter_datetime_picker_plus`: For date and time picking
 
 ## Future Improvements
 
-- Add task filtering and sorting
-- Implement task categories and tags
 - Add light mode theme option
 - Add task reminders and notifications
 - Implement offline support with local caching
 - Add task sharing functionality
-- Implement task priorities
-- Add due dates and deadlines
 - Create recurring tasks
 - Add data analytics and insights
+- Add iOS support
+- Implement task tags in addition to categories
+- Add subtasks functionality
+- Implement task attachments (files, images)
+- Add collaborative task management for teams
 
 ## License
 
