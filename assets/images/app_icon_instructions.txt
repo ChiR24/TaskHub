@@ -1,0 +1,14 @@
+App Icon Instructions:
+
+1. Create a 1024x1024 pixel PNG image with the following characteristics:
+   - Background color: #121212 (dark gray)
+   - Foreground: A simple task/checklist icon in #FFC107 (yellow/amber)
+   - The icon should be simple and recognizable at small sizes
+   - Save as "app_icon.png" in this directory
+
+2. Create a similar 512x512 pixel PNG image for the splash screen:
+   - Background should be transparent
+   - Foreground: Same task/checklist icon in #FFC107 (yellow/amber)
+   - Save as "splash_icon.png" in this directory
+
+You can use any image editing software like Adobe Photoshop, GIMP, or online tools like Canva to create these icons.

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="#121212"/>
+  
+  <!-- Clipboard outline -->
+  <rect x="256" y="154" width="512" height="716" rx="40" stroke="#FFC107" stroke-width="50"/>
+  
+  <!-- Clipboard top -->
+  <rect x="410" y="51" width="204" height="102" rx="20" stroke="#FFC107" stroke-width="50"/>
+  
+  <!-- Task lines -->
+  <line x1="358" y1="358" x2="666" y2="358" stroke="#FFC107" stroke-width="50"/>
+  <line x1="358" y1="512" x2="666" y2="512" stroke="#FFC107" stroke-width="50"/>
+  <line x1="358" y1="666" x2="666" y2="666" stroke="#FFC107" stroke-width="50"/>
+</svg>
