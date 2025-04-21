@@ -15,27 +15,27 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: '3.29.3'
           channel: 'stable'
-      
+
       - name: Install dependencies
         run: flutter pub get
-      
+
       - name: Build web
         run: flutter build web --release
-      
+
       - name: Build Android APK
         run: flutter build apk --release
-      
+
       - name: Zip Web Build
         run: |
           cd build
           zip -r web-build.zip web/
-      
+
       - name: Create Release and Upload Assets
         uses: softprops/action-gh-release@v1
         with:
