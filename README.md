@@ -5,6 +5,8 @@ A modern personal task tracking app built with Flutter and Supabase. This app al
 ## Features
 
 - **User Authentication**: Secure login and signup with Supabase Auth
+- **Offline Mode**: Continue using the app even without internet connection
+- **Custom Splash Screen**: Animated splash screen with app logo
 - **Task Management**: Create, read, update, and delete tasks
 - **Task Status Tracking**: Toggle between pending and completed states
 - **Task Categories**: Organize tasks by categories (Work, Personal, Shopping, etc.)
@@ -101,7 +103,11 @@ lib/
    flutter pub get
    ```
 
-4. Run the app on web:
+4. Set up the app icon and splash screen:
+   - The app uses SVG files directly from the `assets/images` folder
+   - No additional setup is required
+
+5. Run the app on web:
    ```bash
    flutter run -d chrome
    ```
@@ -111,13 +117,11 @@ lib/
    flutter run -d <android-device-id>
    ```
 
-   You can also use the provided batch files:
+   If you encounter any issues, try cleaning and rebuilding:
    ```bash
-   # For web
-   run_app.bat
-
-   # For Android
-   run_android.bat
+   flutter clean
+   flutter pub get
+   flutter run -d android
    ```
 
 ### Supabase Setup

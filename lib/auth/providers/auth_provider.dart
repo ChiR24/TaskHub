@@ -87,6 +87,12 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Set error message
+  void setErrorMessage(String message) {
+    _errorMessage = message;
+    notifyListeners();
+  }
+
   // Get user profile
   Future<Profile?> getUserProfile() async {
     try {

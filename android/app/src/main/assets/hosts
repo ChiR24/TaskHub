@@ -1,0 +1,16 @@
+# Custom hosts file for DNS resolution
+# Format: IP_address canonical_hostname [aliases...]
+
+# Supabase host - multiple entries for redundancy
+146.190.232.198 qgrwnuutybxilkgltxhe.supabase.co
+146.190.232.198 db.qgrwnuutybxilkgltxhe.supabase.co
+146.190.232.198 api.qgrwnuutybxilkgltxhe.supabase.co
+146.190.232.198 auth.qgrwnuutybxilkgltxhe.supabase.co
+146.190.232.198 realtime.qgrwnuutybxilkgltxhe.supabase.co
+146.190.232.198 storage.qgrwnuutybxilkgltxhe.supabase.co
+
+# Common DNS servers
+8.8.8.8 dns.google
+8.8.4.4 dns.google.secondary
+1.1.1.1 one.one.one.one
+1.0.0.1 one.one.one.one.secondary

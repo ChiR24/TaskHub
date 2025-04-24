@@ -31,13 +31,50 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final success = await authProvider.signInWithEmailAndPassword(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
+      try {
+        final success = await authProvider.signInWithEmailAndPassword(
+          _emailController.text.trim(),
+          _passwordController.text,
+        );
 
-      if (success && mounted) {
-        Navigator.pushReplacementNamed(context, AppConstants.dashboardRoute);
+        if (success && mounted) {
+          Navigator.pushReplacementNamed(context, AppConstants.dashboardRoute);
+        }
+      } catch (e) {
+        // Handle specific connection errors
+        if (e.toString().contains('SocketException') ||
+            e.toString().contains('Failed host lookup')) {
+          // Show a dialog with offline mode option
+          if (mounted) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => AlertDialog(
+                title: Text('Connection Error'),
+                content: Text('Cannot connect to the server. Would you like to continue in offline mode?'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      authProvider.setErrorMessage(
+                        'Cannot connect to the server. Please check your internet connection or try again later.'
+                      );
+                    },
+                    child: Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      // Navigate to dashboard in offline mode
+                      Navigator.pushReplacementNamed(context, AppConstants.dashboardRoute);
+                    },
+                    child: Text('Continue Offline'),
+                  ),
+                ],
+              ),
+            );
+          }
+        }
       }
     }
   }
