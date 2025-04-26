@@ -1,0 +1,50 @@
+{
+	"name": "Flutter Devcontainer",
+	// Sets the container build definition.
+	"build": {
+		"dockerfile": "Dockerfile",
+		// Update 'VARIANT' to pick a Flutter version: 3.0, 3.3, 3.7, 3.10, 3.13, 3.16, 3.19, 3.22
+		// The default is 3.22 (stable).
+		"args": {
+			"FLUTTER_VERSION": "3.22.2"
+		}
+	},
+
+	// Configure tool-specific properties.
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+			// Add the IDs of extensions you want installed when the container is created.
+			"extensions": [
+				"Dart-Code.flutter",
+				"Dart-Code.dart-code",
+				"GitHub.copilot", // Or your preferred AI assistant
+				"VisualStudioExptTeam.vscodeintellicode",
+				// Add other useful extensions like linters, formatters, theme, etc.
+				// e.g., "usernamehw.errorlens", "dbaeumer.vscode-eslint"
+			],
+			"settings": {
+				// Add any specific VS Code settings here
+				"terminal.integrated.defaultProfile.linux": "bash",
+				"dart.flutterSdkPath": "/home/vscode/flutter"
+			}
+		}
+	},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [5000, 5001],
+
+	// Use 'postCreateCommand' for commands that need to run only once after the container is created.
+	// "postCreateCommand": "flutter doctor -v",
+
+	// Use 'updateContentCommand' for commands that should run after the content of workspace folder changes.
+	// This is the best place for package install commands like 'flutter pub get'.
+	"updateContentCommand": "bash ./.devcontainer/update-content.sh",
+
+	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+	"remoteUser": "vscode",
+	"features": {
+		// You can add features like Docker-in-Docker, Git, etc.
+		// Example: "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+	}
+} 
